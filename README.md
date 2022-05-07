@@ -20,3 +20,8 @@ of the camera in the world frame at this time.
 The output file has 12 columns of space-separated numbers. The first 9
 columns are a flattened (column-major) rotation matrix, the last 3 are the
 position of the camera. Row i corresponds to image i.
+
+# Intrinsics
+
+The intrinsics of the camera are stored in `intrinsics.txt` as space-separated
+numbers in the format `fx fy cx cy`.
