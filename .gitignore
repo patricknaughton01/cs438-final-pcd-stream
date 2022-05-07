@@ -2,3 +2,5 @@ build/
 test
 sender
 receiver
+data/*
+!data/README.md

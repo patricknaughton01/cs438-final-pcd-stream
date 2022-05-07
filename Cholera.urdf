@@ -1,0 +1,1398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com)
+     Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="Lowpoly_cholera_new_base_URDF_AVATRINA_ver13.0">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.130386130487535 2.42421627216771E-09 0.514289714827964"
+        rpy="0 0 0" />
+      <mass
+        value="215.19814039698" />
+      <inertia
+        ixx="10.2643560828855"
+        ixy="8.72995692893655E-07"
+        ixz="-0.256200055876733"
+        iyy="10.1406984957429"
+        iyz="-8.91234563338853E-08"
+        izz="7.56826571493856" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="torso_link">
+    <inertial>
+      <origin
+        xyz="0.0380114900934237 1.36557432028894E-14 1.04413785242718"
+        rpy="0 0 0" />
+      <mass
+        value="7.8578312658135" />
+      <inertia
+        ixx="0.0813622580761665"
+        ixy="6.2036693056905E-18"
+        ixz="-5.05951327433629E-05"
+        iyy="0.0726665678399411"
+        iyz="2.45525205227084E-18"
+        izz="0.0162195379596107" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/torso_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/torso_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="base_torso"
+    type="fixed">
+    <origin
+      xyz="0 0 0.0400000000000001"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="torso_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="head_base_link">
+    <inertial>
+      <origin
+        xyz="2.77555756156289E-16 -3.33066907387547E-16 0.00249999999999995"
+        rpy="0 0 0" />
+      <mass
+        value="0.0737168146928194" />
+      <inertia
+        ixx="0.000266191924833222"
+        ixy="-4.95251230708974E-19"
+        ixz="2.16665583378074E-20"
+        iyy="4.10395599934383E-05"
+        iyz="7.51143400877818E-20"
+        izz="0.000306924331432107" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="torso_head_base"
+    type="fixed">
+    <origin
+      xyz="0.0211080431151786 0 1.269055"
+      rpy="0 0 0" />
+    <parent
+      link="torso_link" />
+    <child
+      link="head_base_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="head_neck1_link">
+    <inertial>
+      <origin
+        xyz="-0.017162 -3.7965E-11 0.055816"
+        rpy="0 0 0" />
+      <mass
+        value="1.9942" />
+      <inertia
+        ixx="0.0063631"
+        ixy="2.3331E-11"
+        ixz="0.00033213"
+        iyy="0.0061165"
+        iyz="8.9971E-12"
+        izz="0.0057481" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_neck1_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_neck1_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="head_base_neck1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.005"
+      rpy="0 0 0" />
+    <parent
+      link="head_base_link" />
+    <child
+      link="head_neck1_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="1"
+      velocity="1" />
+  </joint>
+  <link
+    name="head_neck2_link">
+    <inertial>
+      <origin
+        xyz="0.11756 0.058091 5.3787E-07"
+        rpy="0 0 0" />
+      <mass
+        value="3.6975" />
+      <inertia
+        ixx="0.03148"
+        ixy="0.0032781"
+        ixz="-1.0621E-07"
+        iyy="0.0191"
+        iyz="3.2192E-07"
+        izz="0.022014" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_neck2_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/head_neck2_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="head_neck1_neck2"
+    type="revolute">
+    <origin
+      xyz="-0.014108 0 0.1378"
+      rpy="-1.5708 -1.5708 0" />
+    <parent
+      link="head_neck1_link" />
+    <child
+      link="head_neck2_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.57"
+      upper="0.785"
+      effort="1"
+      velocity="1" />
+  </joint>
+  <link
+    name="left_base_link">
+    <inertial>
+      <origin
+        xyz="-1.37667655053519E-14 1.35447209004269E-14 0.0452500167858341"
+        rpy="0 0 0" />
+      <mass
+        value="1.39397162412901" />
+      <inertia
+        ixx="0.00271550342627118"
+        ixy="5.42101086242752E-20"
+        ixz="-2.71050543121376E-19"
+        iyy="0.00271550342627118"
+        iyz="4.33680868994202E-19"
+        izz="0.00319199166031868" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="base_left_base"
+    type="fixed">
+    <origin
+      xyz="0.010461531941383809 0.1765523419379713 1.2480977947660172"
+      rpy="2.525718289099135 0.5145185869598203 3.7578603155950945" />
+    <parent
+      link="base_link" />
+    <child
+      link="left_base_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="left_shoulder_link">
+    <inertial>
+      <origin
+        xyz="1.14297332709512E-07 0.00937261893289865 0.0670267729066092"
+        rpy="0 0 0" />
+      <mass
+        value="1.69867696887764" />
+      <inertia
+        ixx="0.00442864599419339"
+        ixy="-4.1010435661553E-09"
+        ixz="2.87401706491712E-10"
+        iyy="0.00390531713147106"
+        iyz="5.69611570013177E-05"
+        izz="0.0035600426008386" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_shoulder_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_shoulder_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_base_shoulder"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0990600000000003"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="left_base_link" />
+    <child
+      link="left_shoulder_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="150"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_upperarm_link">
+    <inertial>
+      <origin
+        xyz="1.35809636203632E-07 0.212500030104988 0.0653493983179887"
+        rpy="0 0 0" />
+      <mass
+        value="6.31285273346305" />
+      <inertia
+        ixx="0.16990036349023"
+        ixy="8.61179150300068E-09"
+        ixz="3.01509572201569E-07"
+        iyy="0.0127291856529223"
+        iyz="-4.74484090256036E-10"
+        izz="0.168139675767776" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_upperarm_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_upperarm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_shoulder_upperarm"
+    type="revolute">
+    <origin
+      xyz="0 0.0744000000000002 0.0634490000000002"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent
+      link="left_shoulder_link" />
+    <child
+      link="left_upperarm_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="150"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_forearm_link">
+    <inertial>
+      <origin
+        xyz="-7.44991930368144E-08 0.150537145068123 0.0641679811020519"
+        rpy="0 0 0" />
+      <mass
+        value="3.18874318974123" />
+      <inertia
+        ixx="0.0756021338545847"
+        ixy="-1.64883032522517E-08"
+        ixz="6.14346233607233E-10"
+        iyy="0.00433469541115748"
+        iyz="-0.00195295037223337"
+        izz="0.0749130409918155" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_forearm_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_forearm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_upperarm_forearm"
+    type="revolute">
+    <origin
+      xyz="0 0.425 0"
+      rpy="3.14159265358979 0 3.14159265358979" />
+    <parent
+      link="left_upperarm_link" />
+    <child
+      link="left_forearm_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_wrist1_link">
+    <inertial>
+      <origin
+        xyz="-6.79008282933324E-08 -0.00349488600556491 0.0580237753953088"
+        rpy="0 0 0" />
+      <mass
+        value="0.63356209986502" />
+      <inertia
+        ixx="0.000995073092670702"
+        ixy="1.98275427299539E-10"
+        ixz="-3.8640843084655E-10"
+        iyy="0.000769001925832068"
+        iyz="3.28288005460469E-05"
+        izz="0.000691326411605404" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist1_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist1_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_forearm_wrist1"
+    type="revolute">
+    <origin
+      xyz="0 0.39225 0.0139500000000001"
+      rpy="-3.14159265358979 0 1.5707963267949" />
+    <parent
+      link="left_forearm_link" />
+    <child
+      link="left_wrist1_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_wrist2_link">
+    <inertial>
+      <origin
+        xyz="1.12157343412633E-08 -0.00401808934817849 0.0461487186768793"
+        rpy="0 0 0" />
+      <mass
+        value="0.547369084917851" />
+      <inertia
+        ixx="0.000728213840607297"
+        ixy="-4.19945240555516E-11"
+        ixz="8.88611992284427E-11"
+        iyy="0.000503983489914328"
+        iyz="1.59481903299775E-05"
+        izz="0.000628884098642882" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist2_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist2_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_wrist1_wrist2"
+    type="revolute">
+    <origin
+      xyz="0 0.0462999999999994 0.0728499999999996"
+      rpy="1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="left_wrist1_link" />
+    <child
+      link="left_wrist2_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_EE_link">
+    <inertial>
+      <origin
+        xyz="1.37667655053519E-14 0 0.0254445195252795"
+        rpy="0 0 0" />
+      <mass
+        value="0.224027022443648" />
+      <inertia
+        ixx="0.00012658229794006"
+        ixy="-2.37169225231204E-20"
+        ixz="2.03287907341032E-20"
+        iyy="0.00012658229794006"
+        iyz="4.06575814682064E-20"
+        izz="0.000155143101918596" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_EE_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_EE_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_wrist2_EE"
+    type="revolute">
+    <origin
+      xyz="0 0.0463000000000005 0.0534000000000002"
+      rpy="1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="left_wrist2_link" />
+    <child
+      link="left_EE_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="left_tool_link">
+    <inertial>
+      <origin
+        xyz="-0.000499999999985734 -1.35447209004269E-14 -1.11022302462516E-16"
+        rpy="0 0 0" />
+      <mass
+        value="2.49999999999995E-05" />
+      <inertia
+        ixx="1.04166666666664E-10"
+        ixy="2.26182198744969E-26"
+        ixz="1.51865190585907E-25"
+        iyy="5.41666666666635E-11"
+        iyz="-8.86957336507055E-25"
+        izz="5.41666666666667E-11" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_tool_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_tool_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_EE_tool"
+    type="fixed">
+    <origin
+      xyz="0 0 0.0532999999999995"
+      rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent
+      link="left_EE_link" />
+    <child
+      link="left_tool_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="left_wrist2_camera_link">
+    <inertial>
+      <origin
+        xyz="-8.34072810818043E-11 0.0577106733608101 -0.00741056156456921"
+        rpy="0 0 0" />
+      <mass
+        value="0.104007488371374" />
+      <inertia
+        ixx="3.62127199796485E-05"
+        ixy="2.75417065727108E-14"
+        ixz="-5.14030583777334E-14"
+        iyy="2.73887262006016E-05"
+        iyz="9.69787629165981E-07"
+        izz="5.46610717399857E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist2_camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/left_wrist2_camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="left_wrist2_camera"
+    type="fixed">
+    <origin
+      xyz="0 -0.0583299999999995 0.0533999999999947"
+      rpy="1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="left_wrist2_link" />
+    <child
+      link="left_wrist2_camera_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="right_base_link">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0" />
+      <inertia
+        ixx="0"
+        ixy="0"
+        ixz="0"
+        iyy="0"
+        iyz="0"
+        izz="0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="base_right_base"
+    type="fixed">
+    <origin
+      xyz="0.010512006603566913 -0.1799677644898198 1.2496690507099943"
+      rpy="3.7546411255457173 0.5141174252613643 2.5256958342104996" />
+    <parent
+      link="base_link" />
+    <child
+      link="right_base_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="right_shoulder_link">
+    <inertial>
+      <origin
+        xyz="1.51306617724722E-05 0.00937262932033189 0.0670267917081215"
+        rpy="0 0 0" />
+      <mass
+        value="1.69867711391749" />
+      <inertia
+        ixx="0.00442865037959082"
+        ixy="1.79699203132783E-08"
+        ixz="-1.97665668981916E-07"
+        iyy="0.00390531752644237"
+        iyz="5.695954757768E-05"
+        izz="0.00356004026239241" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_shoulder_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_shoulder_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_base_shoulder"
+    type="revolute">
+    <origin
+      xyz="0 0 0.0990600000000001"
+      rpy="0 -0.000227291627930162 1.5707963267949" />
+    <parent
+      link="right_base_link" />
+    <child
+      link="right_shoulder_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="150"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="right_upperarm_link">
+    <inertial>
+      <origin
+        xyz="-1.35809655743557E-07 0.212499969895026 0.065349398317975"
+        rpy="0 0 0" />
+      <mass
+        value="6.31285273346304" />
+      <inertia
+        ixx="0.16990036349023"
+        ixy="8.61179151861319E-09"
+        ixz="-3.015095721981E-07"
+        iyy="0.0127291856529223"
+        iyz="4.74484099797015E-10"
+        izz="0.168139675767776" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_upperarm_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_upperarm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_shoulder_upperarm"
+    type="revolute">
+    <origin
+      xyz="1.44214263774201E-05 0.0743999999999996 0.0634489983610651"
+      rpy="-1.5707963267927 -1.57056903516778 0" />
+    <parent
+      link="right_shoulder_link" />
+    <child
+      link="right_upperarm_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="150"
+      velocity="28" />
+  </joint>
+  <link
+    name="right_forearm_link">
+    <inertial>
+      <origin
+        xyz="-6.88233805501426E-08 0.150537145210714 0.0641679259977747"
+        rpy="0 0 0" />
+      <mass
+        value="3.18874323055421" />
+      <inertia
+        ixx="0.0756018393308706"
+        ixy="-9.23950092020904E-08"
+        ixz="-2.65068297675836E-08"
+        iyy="0.00433460742981963"
+        iyz="-0.0019529557313547"
+        izz="0.0749126070237331" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_forearm_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_forearm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_upperarm_forearm"
+    type="revolute">
+    <origin
+      xyz="0 0.425 0"
+      rpy="3.14159265358979 0 -3.14159265358979" />
+    <parent
+      link="right_upperarm_link" />
+    <child
+      link="right_forearm_link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="right_wrist1_link">
+    <inertial>
+      <origin
+        xyz="6.90914477852189E-08 -0.00349490925938423 0.0580237760681647"
+        rpy="0 0 0" />
+      <mass
+        value="0.633562086796879" />
+      <inertia
+        ixx="0.000995072942241236"
+        ixy="-1.48590563573033E-10"
+        ixz="4.3637358157001E-10"
+        iyy="0.000769001946471979"
+        iyz="3.28284789390375E-05"
+        izz="0.000691326353425231" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist1_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist1_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_forearm_wrist1"
+    type="revolute">
+    <origin
+      xyz="0 0.39225 0.0139499999999998"
+      rpy="3.14159265358979 0 1.57079632679491" />
+    <parent
+      link="right_forearm_link" />
+    <child
+      link="right_wrist1_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="right_wrist2_link">
+    <inertial>
+      <origin
+        xyz="-8.35234259533024E-09 -0.00401808937073189 0.0461487186816244"
+        rpy="0 0 0" />
+      <mass
+        value="0.547369083405585" />
+      <inertia
+        ixx="0.000728213843703613"
+        ixy="-2.77103583541617E-12"
+        ixz="-4.36601658689376E-11"
+        iyy="0.000503983489439202"
+        iyz="1.59481907904133E-05"
+        izz="0.00062888409306512" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist2_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist2_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_wrist1_wrist2"
+    type="revolute">
+    <origin
+      xyz="0 0.0463000000000003 0.0728500000000001"
+      rpy="1.5707963267949 0 3.14159265358979" />
+    <parent
+      link="right_wrist1_link" />
+    <child
+      link="right_wrist2_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="right_EE_link">
+    <inertial>
+      <origin
+        xyz="1.11022302462516E-16 1.93178806284777E-14 0.0254445195252656"
+        rpy="0 0 0" />
+      <mass
+        value="0.224027022443648" />
+      <inertia
+        ixx="0.00012658229794006"
+        ixy="-1.01643953670516E-20"
+        ixz="-1.01643953670516E-20"
+        iyy="0.00012658229794006"
+        iyz="-3.04931861011548E-20"
+        izz="0.000155143101918596" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_EE_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_EE_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_wrist2_EE"
+    type="revolute">
+    <origin
+      xyz="0 0.0462999999999996 0.0534"
+      rpy="1.5707963267949 0.000227291627932216 3.14159265358979" />
+    <parent
+      link="right_wrist2_link" />
+    <child
+      link="right_EE_link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="28"
+      velocity="3.33" />
+  </joint>
+  <link
+    name="right_tool_link">
+    <inertial>
+      <origin
+        xyz="-0.000500000000000167 2.22044604925031E-16 -1.95399252334028E-14"
+        rpy="0 0 0" />
+      <mass
+        value="2.49999999999996E-05" />
+      <inertia
+        ixx="1.04166666666667E-10"
+        ixy="-8.07793566946316E-26"
+        ixz="1.27631383577518E-25"
+        iyy="5.41666666666658E-11"
+        iyz="1.37486465094263E-24"
+        izz="5.4166666666667E-11" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_tool_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_tool_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_EE_tool"
+    type="fixed">
+    <origin
+      xyz="0 0 0.0533000000000001"
+      rpy="1.57056903516696 -1.5707963267949 0" />
+    <parent
+      link="right_EE_link" />
+    <child
+      link="right_tool_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="right_sucker_link">
+    <inertial>
+      <origin
+        xyz="7.40765482450945E-05 5.32275407660876E-06 0.0586623958389181"
+        rpy="0 0 0" />
+      <mass
+        value="0.455937790675365" />
+      <inertia
+        ixx="0.000765771744246054"
+        ixy="2.91583140806992E-09"
+        ixz="2.40901442618506E-07"
+        iyy="0.00066416868364583"
+        iyz="2.81352525356189E-09"
+        izz="0.000291802729043668" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_sucker_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_sucker_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_tool_sucker"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="1.5707963267949 0 1.5707963267949" />
+    <parent
+      link="right_tool_link" />
+    <child
+      link="right_sucker_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="right_wrist2_camera_link">
+    <inertial>
+      <origin
+        xyz="8.34188274012604E-11 0.057710673360825 0.00741056156458231"
+        rpy="0 0 0" />
+      <mass
+        value="0.104007488371374" />
+      <inertia
+        ixx="3.62127199796483E-05"
+        ixy="-2.75416964083154E-14"
+        ixz="-5.14030448252063E-14"
+        iyy="2.73887262006014E-05"
+        iyz="-9.69787629165987E-07"
+        izz="5.46610717399854E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist2_camera_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="Cholera/right_wrist2_camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="right_wrist2_camera"
+    type="fixed">
+    <origin
+      xyz="0 -0.0583300000000004 0.0533999999999997"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="right_wrist2_link" />
+    <child
+      link="right_wrist2_camera_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <klampt>
+    <!-- left gripper Robotiq140 -->
+    <mount link = 'left_tool_link' file = "robotiq_140.rob" transform = "0 0 1 0 1 0 -1 0 0  0 0 0" prefix="left_gripper"/>
+    <noselfcollision group1="left_gripper:base_link left_gripper:right_inner_knuckle left_gripper:right_outer_knuckle left_gripper:right_outer_finger left_gripper:right_inner_finger  left_gripper:right_inner_finger_pad left_gripper:left_inner_knuckle left_gripper:left_outer_knuckle  left_gripper:left_outer_finger  left_gripper:left_inner_finger  left_gripper:left_inner_finger_pad" group2="left_EE_link left_tool_link left_wrist2_link left_wrist1_link"/>
+    <!-- right gripper Robotiq ePick -->
+    <noselfcollision group1="right_sucker_link" group2="right_EE_link right_tool_link right_wrist2_link right_wrist1_link"/>
+    <noselfcollision group1="torso_link" group2="left_base_link right_base_link"/>
+    <noselfcollision group1="left_base_link" group2="right_base_link right_shoulder_link right_upperarm_link"/>
+    <noselfcollision group1="left_base_link" group2="left_upperarm_link"/>
+    <noselfcollision group1="left_shoulder_link" group2="right_shoulder_link"/>
+    <noselfcollision group1="left_wrist2_link" group2="left_forearm_link left_tool_link"/>
+    <noselfcollision pairs="left_EE_link left_wrist1_link"/>
+    <noselfcollision group1="right_base_link" group2="left_shoulder_link left_upperarm_link"/>
+    <noselfcollision group1="right_base_link" group2="right_upperarm_link"/>
+    <noselfcollision group1="right_wrist2_link" group2="right_forearm_link left_tool_link"/>
+    <noselfcollision pairs="right_EE_link right_wrist1_link"/>
+    <noselfcollision pairs="left_tool_link right_tool_link"/>
+    <noselfcollision group1="left_tool_link right_tool_link" group2="base_link left_base_link left_shoulder_link left_upperarm_link left_forearm_link left_wrist1_link left_wrist2_link left_EE_link right_base_link right_shoulder_link right_upperarm_link right_forearm_link right_wrist1_link right_wrist2_link right_EE_link"/>
+
+    <noselfcollision group1="base_link" group2="head_base_link head_neck1_link head_neck2_link"/>
+    <noselfcollision group1="base_link" group2="left_shoulder_link right_shoulder_link"/>
+    <noselfcollision group1="head_base_link" group2="head_neck2_link"/>
+    <!-- <noselfcollision group1="head_neck1_link" group2="head_face_link"/> -->
+    <sensors>
+        <CameraSensor name="realsense_overhead_5_l515" link="left_wrist2_link"
+        Tsensor="0.9997864319857709 -0.0201111306309159 -0.0047573986492837565 0.0048949440577391815 0.006795582674075577 0.9999649291744145 -0.020078096021126472 -0.9997746558504402 0.006892574214354562 0.0037220311923585234 -0.056645973112591744 0.14671806292615752"
+        xres="1280" yres="720" xfov="1.19901" yfov="0.7347727" zmin="0.01"
+        zmax ="1.5" zresolution="0.01" zvarianceLinear="0.00001"/>
+
+        <CameraSensor name="realsense_overhead_4_l515" link="right_wrist2_link"
+        Tsensor="0.9998931445526114 -0.007518962117395853 -0.01253653402531087 0.012615369442428227 0.01053073775651491 0.9998649688913672 -0.007385927871409198 -0.9999162808810449 0.010624466974755175 0.0015085317684312054 -0.05205054693141718 0.14777557494542187"
+        xres="1280" yres="720" xfov="1.19901" yfov="0.7347727"
+        zmin="0.01" zmax ="1.5" zresolution="0.01" zvarianceLinear="0.00001"/>
+
+        <CameraSensor name="realsense_slam_l515" link="base_link"
+        Tsensor="0.008535120819753494 -0.001049916270607354 0.9999630240105964 -0.9997338576643883 0.021424624312872398 0.008555659678403327 -0.021432814842493042 -0.9997699151049089 -0.0008667750864108648 0.09357422565716068 -0.0012717915732546566 1.1642385353448976"
+        xres="1280" yres="720" xfov="1.196155" yfov="0.7315540"
+        zmin="0.01" zmax ="1.5" zresolution="0.01" zvarianceLinear="0.00001"/>
+
+        <CameraSensor name="zed_slam_left" link="base_link"
+        Tsensor="0.006447890696940961 -0.059488606071236794 0.9982081598811248
+                -0.9988406134813741 -0.048005552835298726 0.0035910662941980864
+                0.04770590703164829 -0.9970740056007268 -0.05972917034087444
+                0.07982846612525446 0.06223457108480517 0.9930913648574041"
+        xres="672" yres="376" xfov="1.20428" yfov="0.942478"
+        zmin="0.1" zmax ="1.5" zresolution="0.01" zvarianceLinear="0.00001"/>
+
+        <CameraSensor name="zed_slam_right" link="base_link"
+        Tsensor="0.006447890696940961 -0.059488606071236794 0.9982081598811248
+            -0.9988406134813741 -0.048005552835298726 0.0035910662941980864
+            0.04770590703164829 -0.9970740056007268 -0.05972917034087444
+            0.08060221300888737 -0.057626302532959715 0.998816073701202"
+        xres="672" yres="376" xfov="1.20428" yfov="0.942478"
+        zmin="0.1" zmax ="1.5" zresolution="0.01" zvarianceLinear="0.00001"/>
+
+        <LaserRangeSensor name="lidar" link="base_link"
+        Tsensor="0 0 1  1 0 0  0 1 0  0.2 0 0.2"  depthMaximum="25.0"
+        depthMinimum="0.1" depthResolution="0.01" depthVarianceLinear="0.0001"
+        xSweepMagnitude="1.91986" measurementCount="660" />
+
+    </sensors>
+  </klampt>
+</robot>
