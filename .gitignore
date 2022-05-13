@@ -4,3 +4,4 @@ sender
 receiver
 data/*
 !data/README.md
+.vscode

@@ -24,6 +24,8 @@
 #include <chrono>
 #include <deque>
 #include "packet.h"
+#include "point.h"
+#include "v_grid.h"
 
 struct sockaddr_in si_other;
 int s, slen;
@@ -241,8 +243,6 @@ int main(int argc, char** argv) {
     }
     udpPort = (unsigned short int) atoi(argv[2]);
     numBytes = atoll(argv[4]);
-
-
 
     reliablyTransfer(argv[1], udpPort, argv[3], numBytes);
 

@@ -7,5 +7,5 @@ target_link_libraries( test ${OpenCV_LIBS} )
 
 include_directories(include)
 
-add_executable(sender src/sender.cpp)
+add_executable(sender src/sender.cpp src/v_grid.cpp src/point.cpp)
 add_executable(receiver src/receiver.cpp)
