@@ -8,11 +8,11 @@ private:
 public:
     float x, y, z;
     unsigned short r, g, b;
-    size_t s_buf_size;
+    static const unsigned int s_buf_size =
+        3 * sizeof(float) + 3 * sizeof(unsigned short);
     Point(float _x, float _y, float _z,
         unsigned short _r, unsigned short _g, unsigned short _b):
         x(_x), y(_y), z(_z), r(_r), g(_g), b(_b),
-        s_buf_size(3 * sizeof(float) + 3 * sizeof(unsigned short)),
         has_serialized(false){};
     Point(const Point &p);
     ~Point();

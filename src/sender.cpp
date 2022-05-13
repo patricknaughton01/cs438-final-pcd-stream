@@ -17,23 +17,35 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <string.h>
+#include <string>
 #include <sys/time.h>
 #include <iostream>
 #include <list>
 #include <chrono>
 #include <deque>
+#include <thread>
+#include <mutex>
+#include <fstream>
+#include <vector>
+#include <opencv2/opencv.hpp>
 #include "packet.h"
 #include "point.h"
 #include "v_grid.h"
+
+#define TF_FN "transforms.txt"
+#define INTRINSICS_FN "intrinsics.txt"
+#define NUM_FN "num.txt"
+#define IMG_DIR "imgs"
+#define CN "realsense_overhead_5_l515"
+#define D_SUF "_depth"
+#define C_SUF "_color"
 
 struct sockaddr_in si_other;
 int s, slen;
 unsigned int from_len;
 unsigned int MAXSNUM = -1;
 unsigned int MAXW = 1 << 20;
-void pack_packet(FILE *fp, unsigned long long int *start,
-    unsigned long long int numbytes, unsigned int *seq, packet* pkt);
+void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt);
 template <class T>
 T min(T a, T b);
 double get_timeout(double est_rtt, double dev_rtt, double gamma);
@@ -49,16 +61,8 @@ void diep(char *s) {
 
 
 void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
-    char* filename, unsigned long long int bytesToTransfer)
+    std::deque<Point> &points, std::mutex &points_lock)
 {
-    //Open the file
-    FILE *fp;
-    fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        printf("Could not open file to send.");
-        exit(1);
-    }
-
 	/* Determine how many bytes to transfer */
 
     slen = sizeof (si_other);
@@ -96,17 +100,24 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     std::deque<unsigned long long> orig_time_stamps;
     bool added_end_pkt = false;
     while(true){
-        if(added_end_pkt && pkt_buf.size() == 0){
-            break;
+        points_lock.lock();
+        if(points.empty()){
+            points_lock.unlock();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
         }
         packet pkt;
+        // if(added_end_pkt && pkt_buf.size() == 0){
+        //     break;
+        // }
         // Try to send available packets in valid window
         if(pkt_buf.size() < window_size && !added_end_pkt){
             // The packet we're about to create and send is the end packet
-            if(byte_start >= bytesToTransfer){
-                added_end_pkt = true;
-            }
-            pack_packet(fp, &byte_start, bytesToTransfer, &next_seq, &pkt);
+            // if(byte_start >= bytesToTransfer){
+            //     added_end_pkt = true;
+            // }
+            pack_packet(points, &next_seq, &pkt);
+            points_lock.unlock();
             sendto(s, &pkt, sizeof(packet), 0,
                 (const struct sockaddr*) &si_other, sizeof(si_other));
             // Track in-flight packets
@@ -116,6 +127,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             ).count();
             time_stamps.push_back(now);
             orig_time_stamps.push_back(now);
+        }else{
+            points_lock.unlock();
         }
         // Receive any incoming acks
         if((recv_bytes = recvfrom(s, &pkt, sizeof(packet), 0,
@@ -184,15 +197,31 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
 
 }
 
-void pack_packet(FILE *fp, unsigned long long *start,
-    unsigned long long numbytes, unsigned int *seq, packet* pkt)
+
+/**
+ * @brief Packs data from points into a packet. Will stop when the packet is
+ * full (MAXPAYLOADSIZE reached) or runs out of points to send. Assumes no
+ * other thread will interfere with `points`.
+ *
+ * @param points Points to send.
+ * @param seq Pointer to sequence number to use, automatically incremented.
+ * @param pkt Pointer to packet to update.
+ */
+void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
 {
     pkt->seq = *seq;
     *seq += 1;
-    pkt->len = min(numbytes - *start, (unsigned long long) MAXPAYLOADSIZE);
+    unsigned int len = 0;
+    while(len < MAXPAYLOADSIZE && !points.empty()){
+        points.front().serialize();
+        for(size_t i = 0; i < Point::s_buf_size; i++){
+            pkt->data[len] = points.front().s_buf()[i];
+            len += 1;
+        }
+        points.pop_front();
+    }
+    pkt->len = len;
     pkt->is_ack = false;
-    fread(&(pkt->data), sizeof(char), pkt->len, fp);
-    *start += pkt->len;
 }
 
 template <class T>
@@ -229,23 +258,105 @@ void print(T s, T e){
     std::cout << std::endl;
 }
 
-/*
- *
- */
+
+void load_intrinsics(std::vector<double> &intrinsics, std::ifstream &i_stream){
+    for(size_t i = 0; i < 4; i++){
+        double _int;
+        i_stream >> _int;
+        intrinsics.push_back(_int);
+    }
+}
+
+
+void load_tf(std::vector<double> &R, std::vector<double> &p, std::ifstream &tf_stream){
+    for(size_t i = 0; i < 9; i++){
+        double _r;
+        tf_stream >> _r;
+        R.push_back(_r);
+    }
+    for(size_t i = 0; i < 3; i++){
+        double _p;
+        tf_stream >> _p;
+        p.push_back(_p);
+    }
+}
+
+
+Point load_point(cv::Vec3b color, unsigned int depth, double x, double y,
+    std::vector<double> intrinsics, std::vector<double> R,
+    std::vector<double> p)
+{
+    double fx = intrinsics[0], fy = intrinsics[1], cx = intrinsics[2],
+        cy = intrinsics[3];
+    double z_c = (double) depth;
+    double x_c = z_c * (x - cx) / fx;
+    double y_c = z_c * (y - cy) / fy;
+    double x_w = R[0] * x_c + R[3] * y_c + R[6] * z_c + p[0];
+    double y_w = R[1] * x_c + R[4] * y_c + R[7] * z_c + p[1];
+    double z_w = R[2] * x_c + R[5] * y_c + R[8] * z_c + p[2];
+    Point point(x_w, y_w, z_w, color[0], color[1], color[2]);
+    return point;
+}
+
+
+void load_points(const std::string &dir, std::deque<Point> &points,
+    std::mutex &points_lock)
+{
+    VoxelGrid vg(0.1);
+    std::string int_path = dir + "/" + IMG_DIR + "/" + INTRINSICS_FN;
+    std::vector<double> intrinsics;
+    std::ifstream int_stream(int_path);
+    load_intrinsics(intrinsics, int_stream);
+    std::string tf_path = dir + "/" + TF_FN;
+    std::ifstream tf_stream(tf_path);
+    std::string num_path = dir + "/" + NUM_FN;
+    std::ifstream num_stream(num_path);
+    size_t num;
+    num_stream >> num;
+    std::string color_pref = dir + "/" + IMG_DIR + "/" + CN + "/" + C_SUF + "/";
+    std::string depth_pref = dir + "/" + IMG_DIR + "/" + CN + "/" + D_SUF + "/";
+    for(size_t i = 0; i < num; i++){
+        std::string c_fn = std::to_string(i) + ".jpg";
+        std::string d_fn = std::to_string(i) + ".png";
+        std::string c_path = color_pref + c_fn;
+        std::string d_path = depth_pref + d_fn;
+        cv::Mat c_image = cv::imread(c_path);
+        cv::Mat d_image = cv::imread(d_path, cv::IMREAD_ANYDEPTH | cv::IMREAD_GRAYSCALE);
+        std::vector<double> R, p;
+        load_tf(R, p, tf_stream);
+        for(size_t r = 0; r < c_image.rows; r++){
+            for(size_t c = 0; c < c_image.cols; c++){
+                Point point = load_point(c_image.at<cv::Vec3b>(r, c),
+                    d_image.at<unsigned int>(r, c), (double) c,
+                    (double) r, intrinsics, R, p);
+                if(vg.add_point(point)){
+                    points_lock.lock();
+                    points.push_back(point);
+                    points_lock.unlock();
+                }
+            }
+        }
+    }
+}
+
+
 int main(int argc, char** argv) {
 
     unsigned short int udpPort;
     unsigned long long int numBytes;
 
-    if (argc != 5) {
-        fprintf(stderr, "usage: %s receiver_hostname receiver_port filename_to_xfer bytes_to_xfer\n\n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr,
+            "usage: %s receiver_hostname receiver_port dir_name\n\n", argv[0]);
         exit(1);
     }
     udpPort = (unsigned short int) atoi(argv[2]);
-    numBytes = atoll(argv[4]);
 
-    reliablyTransfer(argv[1], udpPort, argv[3], numBytes);
+    std::mutex points_lock;
+    std::deque<Point> points;
+    // std::thread transfer_thread(reliablyTransfer, argv[1], udpPort, points, points_lock);
 
+    load_points(argv[3], points, points_lock);
 
     return (EXIT_SUCCESS);
 }
