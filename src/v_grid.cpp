@@ -9,7 +9,7 @@
  * @param p Point to add.
  * @return bool Whether or not the voxel grid was changed.
  */
-bool VoxelGrid::add_point(Point p){
+bool VoxelGrid::add_point(const Point &p){
     Cell c = get_cell_of_point(p);
     if(grid.find(c) == grid.end()){
         // No point in this cell yet, add this point.

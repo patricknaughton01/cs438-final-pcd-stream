@@ -61,7 +61,7 @@ void diep(char *s) {
 
 
 void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
-    std::deque<Point> &points, std::mutex &points_lock)
+    std::deque<Point> &points, std::mutex &points_lock, bool &finished)
 {
 	/* Determine how many bytes to transfer */
 
@@ -101,22 +101,24 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     bool added_end_pkt = false;
     while(true){
         points_lock.lock();
-        if(points.empty()){
+        if(points.empty() && !finished){
             points_lock.unlock();
+            std::cout << "SLEEPING" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
         packet pkt;
-        // if(added_end_pkt && pkt_buf.size() == 0){
-        //     break;
-        // }
+        if(added_end_pkt && pkt_buf.size() == 0){
+            break;
+        }
         // Try to send available packets in valid window
         if(pkt_buf.size() < window_size && !added_end_pkt){
             // The packet we're about to create and send is the end packet
-            // if(byte_start >= bytesToTransfer){
-            //     added_end_pkt = true;
-            // }
+            if(finished && points.empty()){
+                added_end_pkt = true;
+            }
             pack_packet(points, &next_seq, &pkt);
+            std::cout << "Packet len: " << pkt.len << std::endl;
             points_lock.unlock();
             sendto(s, &pkt, sizeof(packet), 0,
                 (const struct sockaddr*) &si_other, sizeof(si_other));
@@ -194,7 +196,6 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     printf("Closing the socket\n");
     close(s);
     return;
-
 }
 
 
@@ -313,8 +314,8 @@ void load_points(const std::string &dir, std::deque<Point> &points,
     std::ifstream num_stream(num_path);
     size_t num;
     num_stream >> num;
-    std::string color_pref = dir + "/" + IMG_DIR + "/" + CN + "/" + C_SUF + "/";
-    std::string depth_pref = dir + "/" + IMG_DIR + "/" + CN + "/" + D_SUF + "/";
+    std::string color_pref = dir + "/" + IMG_DIR + "/" + CN + C_SUF + "/";
+    std::string depth_pref = dir + "/" + IMG_DIR + "/" + CN + D_SUF + "/";
     for(size_t i = 0; i < num; i++){
         std::string c_fn = std::to_string(i) + ".jpg";
         std::string d_fn = std::to_string(i) + ".png";
@@ -326,13 +327,15 @@ void load_points(const std::string &dir, std::deque<Point> &points,
         load_tf(R, p, tf_stream);
         for(size_t r = 0; r < c_image.rows; r++){
             for(size_t c = 0; c < c_image.cols; c++){
-                Point point = load_point(c_image.at<cv::Vec3b>(r, c),
-                    d_image.at<unsigned int>(r, c), (double) c,
-                    (double) r, intrinsics, R, p);
-                if(vg.add_point(point)){
-                    points_lock.lock();
-                    points.push_back(point);
-                    points_lock.unlock();
+                unsigned int depth = d_image.at<unsigned int>(r, c);
+                if(depth > 0){
+                    Point point = load_point(c_image.at<cv::Vec3b>(r, c),
+                        depth, (double) c, (double) r, intrinsics, R, p);
+                    if(vg.add_point(point)){
+                        points_lock.lock();
+                        points.push_back(point);
+                        points_lock.unlock();
+                    }
                 }
             }
         }
@@ -354,9 +357,12 @@ int main(int argc, char** argv) {
 
     std::mutex points_lock;
     std::deque<Point> points;
-    // std::thread transfer_thread(reliablyTransfer, argv[1], udpPort, points, points_lock);
-
+    bool finished_flag = false;
+    // std::thread transfer_thread(reliablyTransfer, argv[1], udpPort,
+    //     std::ref(points), std::ref(points_lock), std::ref(finished_flag));
     load_points(argv[3], points, points_lock);
+    finished_flag = true;
+    // transfer_thread.join();
 
     return (EXIT_SUCCESS);
 }

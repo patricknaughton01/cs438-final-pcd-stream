@@ -1,9 +1,12 @@
 #include <cmath>
+#include <stdlib.h>
+#include <iostream>
 #include "point.h"
 
 
 Point::Point(const Point &p){
     x = p.x; y = p.y; z = p.z; r = p.r; g = p.g; b = p.b;
+    has_serialized = p.has_serialized;
     if(p.has_serialized){
         serialize();
     }
