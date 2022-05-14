@@ -358,11 +358,11 @@ int main(int argc, char** argv) {
     std::mutex points_lock;
     std::deque<Point> points;
     bool finished_flag = false;
-    // std::thread transfer_thread(reliablyTransfer, argv[1], udpPort,
-    //     std::ref(points), std::ref(points_lock), std::ref(finished_flag));
+    std::thread transfer_thread(reliablyTransfer, argv[1], udpPort,
+        std::ref(points), std::ref(points_lock), std::ref(finished_flag));
     load_points(argv[3], points, points_lock);
     finished_flag = true;
-    // transfer_thread.join();
+    transfer_thread.join();
 
     return (EXIT_SUCCESS);
 }
