@@ -18,6 +18,16 @@
 #include <iostream>
 #include <chrono>
 #include "packet.h"
+#include "point.h"
+#include "v_grid.h"
+
+/**
+ * @brief Need to update vg with whatever points come in from sender,
+ * what to output at the end
+ * 
+ */
+
+VoxelGrid * vg;
 
 
 struct sockaddr_in si_me, si_other;
@@ -30,8 +40,32 @@ void diep(char *s) {
 }
 
 
+/**
+ * @brief Takes a packet with multiple points and adds
+ * the points to the voxel grid
+ * 
+ * @param pkt: pointer to the packet with the points to unpack
+ * @param vg: the voxel grid to update
+ */
+void unpack_packet(packet * pkt, VoxelGrid * vg) {
+    float x, y, z;
+    unsigned short r, g, b;
 
-void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
+    //TODO: assumes that there's no Point spread across 2 packets, correct?
+    int numPoints = pkt->len / Point::s_buf_size;
+    for(int i = 0; i < numPoints; i++){
+        
+        char* start = pkt->data + (i * Point::s_buf_size);
+        Point * point = Point::deserialize(start);
+        vg->add_point(point);
+
+    }
+
+}
+
+
+
+void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
 
     slen = sizeof (si_other);
 
@@ -51,7 +85,7 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
 
 	/* Now receive data and send acknowledgements */
     unsigned int exp_seq = 1;
-    FILE *fp = fopen(destinationFile, "wb");
+    //FILE *fp = fopen(destinationFile, "wb");
     while(true){
         packet pkt;
         std::cout << "SOCKET: " << s << std::endl;
@@ -76,17 +110,17 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
         }
         std::cout << std::endl;
         std::cout << "Exp seq " << exp_seq << " Actual: " << pkt.seq << std::endl;
+        packet_ack pkt_ack;
         if(pkt.seq == exp_seq){
-            pkt.ack = pkt.seq;
+            pkt_ack.ack = pkt.seq;
             exp_seq++;
-            fwrite(pkt.data, sizeof(char), pkt.len, fp);
+            unpack_packet(&pkt, vg);
         }
         else{
-            pkt.ack = exp_seq - 1;
+            pkt_ack.ack = exp_seq - 1;
         }
-        pkt.is_ack = true;
-        pkt.len = 0;
-        sendto(s, &pkt, sizeof(pkt), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
+
+        sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
         std::cout << "Send ack" << std::endl;
         if(in_len == 0){
             // End of transmission
@@ -94,7 +128,7 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
             break;
         }
     }
-    fclose(fp);
+
     // Wait time in ms after receiving end of file
     unsigned long end_timeout = 100;
     unsigned long end_start = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -114,6 +148,7 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
             break;
         }
         packet pkt;
+        packet_ack pkt_ack;
         unsigned int from_len;
         int n_r_bytes = recvfrom(s, &pkt, sizeof(pkt), 0, (struct sockaddr*) &si_other, &from_len);
         //std::cout << "Received " << n_r_bytes << std::endl;
@@ -125,14 +160,13 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
             //std::cout << "Connection was closed" << std::endl;
             break;
         }
-        pkt.ack = pkt.seq;
-        pkt.is_ack = true;
-        pkt.len = 0;
-        sendto(s, &pkt, sizeof(pkt), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
+        pkt_ack.ack = pkt.seq;
+
+        sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
     }
 
     close(s);
-	printf("%s received.\n", destinationFile);
+
     return;
 }
 
@@ -144,11 +178,14 @@ int main(int argc, char** argv) {
     unsigned short int udpPort;
 
     if (argc != 3) {
-        fprintf(stderr, "usage: %s UDP_port filename_to_write\n\n", argv[0]);
+        fprintf(stderr, "usage: %s UDP_port\n\n", argv[0]);
         exit(1);
     }
 
+    //Use default arg res = .1
+    vg = new VoxelGrid();
+
     udpPort = (unsigned short int) atoi(argv[1]);
 
-    reliablyReceive(udpPort, argv[2]);
+    reliablyReceive(udpPort, &vg);
 }

@@ -20,6 +20,7 @@ public:
     float c_dist(const Point &p) const;
     const char * const serialize();
     const char * const s_buf() const;
+    static Point * const deserialize(const char *);
 };
 
 #endif // POINT_H
