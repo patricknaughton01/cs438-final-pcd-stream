@@ -71,19 +71,9 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
             break;
         }
         unsigned int in_len = pkt.len;
-        for(int i = 0; i < pkt.len; i++){
-            std::cout << pkt.data[i];
-        }
         std::cout << std::endl;
         std::cout << "Exp seq " << exp_seq << " Actual: " << pkt.seq << std::endl;
-        if(pkt.seq == exp_seq){
-            pkt.ack = pkt.seq;
-            exp_seq++;
-            fwrite(pkt.data, sizeof(char), pkt.len, fp);
-        }
-        else{
-            pkt.ack = exp_seq - 1;
-        }
+        pkt.ack = pkt.seq;
         pkt.is_ack = true;
         pkt.len = 0;
         sendto(s, &pkt, sizeof(pkt), 0, (const struct sockaddr*) &si_other, sizeof(si_other));

@@ -108,7 +108,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             continue;
         }
         if(finished && points.empty() && pkt_buf.empty()){
+            std::cout << "Breaking out of loop" << std::endl;
             points_lock.unlock();
+            std::cout << "Hitting break" << std::endl;
             break;
         }
         packet pkt;
@@ -135,14 +137,17 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         {
             // Handle incoming acks
             // while(pkt_buf.begin() != pkt_buf.end() && ack_applies_seq(pkt_buf, pkt.ack)){
-            for(auto it = pkt_buf.begin(); it != pkt_buf.end(); it++){
+            auto it = pkt_buf.begin();
+            auto ts_it = time_stamps.begin();
+            auto orig_ts_it = orig_time_stamps.begin();
+            while(it != pkt_buf.end()){
                 unsigned int seq = pkt_buf.begin()->seq;
                 std::cout << "Looking at seq " << seq << std::endl;
                 if(seq == pkt.ack){
-                    pkt_buf.pop_front();
-                    unsigned long ts = orig_time_stamps.front();
-                    time_stamps.pop_front();
-                    orig_time_stamps.pop_front();
+                    it = pkt_buf.erase(it);
+                    unsigned long ts = *orig_ts_it;
+                    ts_it = time_stamps.erase(ts_it);
+                    orig_ts_it = orig_time_stamps.erase(orig_ts_it);
                     unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
@@ -161,6 +166,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     frac_window_size = cand_w;
                     window_size = min((unsigned int) frac_window_size, MAXW);
                     std::cout << "Window size: " << frac_window_size << " " << window_size << std::endl;
+                }else{
+                    it++; ts_it++; orig_ts_it++;
                 }
             }
         }
@@ -203,7 +210,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now().time_since_epoch()
         ).count();
-        if(now = last_sent >= get_timeout(est_rtt, dev_rtt, gamma)){
+        if(now - last_sent >= get_timeout(est_rtt, dev_rtt, gamma)){
             end_pkt.seq = next_seq;
             end_pkt.len = 0;
             end_pkt.is_ack = false;
@@ -215,7 +222,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         if(recvfrom(s, &end_pkt, sizeof(packet), 0,
             (struct sockaddr*) &si_other, &from_len) > 0)
         {
-            if(end_pkt.seq == next_seq){
+            if(end_pkt.ack == next_seq){
                 break;
             }
         }
@@ -240,6 +247,9 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
 {
     pkt->seq = *seq;
     *seq += 1;
+    pkt->ts = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
     unsigned int len = 0;
     while(len < MAXPAYLOADSIZE && !points.empty()){
         points.front().serialize();
