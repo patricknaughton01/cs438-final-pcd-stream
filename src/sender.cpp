@@ -132,10 +132,12 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             points_lock.unlock();
         }
         // Receive any incoming acks
-        if((recv_bytes = recvfrom(s, &pkt, sizeof(packet), 0,
+        packet_ack pkt_ack;
+        if((recv_bytes = recvfrom(s, &pkt_ack, sizeof(packet_ack), 0,
             (struct sockaddr*) &si_other, &from_len)) > 0)
         {
             // Handle incoming acks
+
             // while(pkt_buf.begin() != pkt_buf.end() && ack_applies_seq(pkt_buf, pkt.ack)){
             auto it = pkt_buf.begin();
             auto ts_it = time_stamps.begin();
@@ -143,11 +145,12 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             while(it != pkt_buf.end()){
                 unsigned int seq = pkt_buf.begin()->seq;
                 std::cout << "Looking at seq " << seq << std::endl;
-                if(seq == pkt.ack){
+                if(seq == pkt_ack.ack){
                     it = pkt_buf.erase(it);
                     unsigned long ts = *orig_ts_it;
                     ts_it = time_stamps.erase(ts_it);
                     orig_ts_it = orig_time_stamps.erase(orig_ts_it);
+
                     unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
@@ -260,7 +263,6 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
         points.pop_front();
     }
     pkt->len = len;
-    pkt->is_ack = false;
 }
 
 template <class T>

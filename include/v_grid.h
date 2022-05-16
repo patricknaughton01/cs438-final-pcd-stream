@@ -23,7 +23,7 @@ public:
     double d_thresh;
     double c_thresh;
     std::unordered_map<Cell, Point, CellHashFunction> grid;
-    VoxelGrid(double _res): res(_res), d_thresh(_res / D_THRESH_DEN),
+    VoxelGrid(double _res = .1): res(_res), d_thresh(_res / D_THRESH_DEN),
         c_thresh(C_THRESH){};
     bool add_point(const Point &p);
     Cell get_cell_of_point(const Point &p) const;
