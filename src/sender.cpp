@@ -53,6 +53,13 @@ bool ack_applies_seq(const std::list<packet> &pkt_buf, unsigned int ack);
 template <class T>
 void print(T s, T e);
 
+bool use_throttling = false;
+//Use bucket algorithm for bandwidth throttling https://en.wikipedia.org/wiki/Token_bucket
+int bucket = 0;         //bucket used for bandwidth throttling
+unsigned long long last_bucket_check_time = 0;
+int max_bucket_size = 2400;    //affects max burst size 
+int bandwidth_rate = 2400; //bytes per second
+
 
 void diep(char *s) {
     perror(s);
@@ -101,6 +108,24 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     std::list<unsigned long long> orig_time_stamps;
     bool added_end_pkt = false;
     while(true){
+
+        if (use_throttling) {
+            if (last_bucket_check_time == 0) {
+                bucket = bandwidth_rate;
+            } else {
+                unsigned long long cur_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+                unsigned long long time_passed = cur_time - last_bucket_check_time;
+                last_bucket_check_time = cur_time;
+                bucket += (bandwidth_rate * time_passed) / 1000;
+                if (bucket > max_bucket_size) {
+                    bucket = max_bucket_size;
+                }
+            }
+            
+
+        }
+
         points_lock.lock();
         if(points.empty() && !finished){
             points_lock.unlock();
@@ -117,21 +142,33 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         packet pkt;
         // Try to send available packets in valid window
         if(pkt_buf.size() < window_size && !points.empty()){
-            pack_packet(points, &next_seq, &pkt);
-            std::cout << "Packet len: " << pkt.len << std::endl;
-            points_lock.unlock();
-            sendto(s, &pkt, sizeof(packet), 0,
-                (const struct sockaddr*) &si_other, sizeof(si_other));
-            // Track in-flight packets
-            pkt_buf.push_back(pkt);
-            unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::system_clock::now().time_since_epoch()
-            ).count();
-            time_stamps.push_back(now);
-            orig_time_stamps.push_back(now);
-        }else{
-            points_lock.unlock();
+            bool can_send = true;
+            if (use_throttling) {
+                if (bucket > MAXPAYLOADSIZE) {
+                    bucket -= MAXPAYLOADSIZE;
+                } else {
+                    can_send = false;
+                }
+            }
+
+            if (can_send) {
+                pack_packet(points, &next_seq, &pkt);
+                std::cout << "Packet len: " << pkt.len << std::endl;
+                sendto(s, &pkt, sizeof(packet), 0,
+                    (const struct sockaddr*) &si_other, sizeof(si_other));
+                // Track in-flight packets
+                pkt_buf.push_back(pkt);
+                unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+                time_stamps.push_back(now);
+                orig_time_stamps.push_back(now);
+            }
+            
         }
+            
+        points_lock.unlock();
+        
         // Receive any incoming acks
         packet_ack pkt_ack;
         if((recv_bytes = recvfrom(s, &pkt_ack, sizeof(packet_ack), 0,

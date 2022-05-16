@@ -143,8 +143,6 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
 
     close(s);
 
-    std::cout << vg->grid.size() << std::endl;
-    vg->print_points();
 
     return;
 }
