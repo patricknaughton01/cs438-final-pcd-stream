@@ -96,8 +96,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     double gamma = 4;
     double timeout = get_timeout(est_rtt, dev_rtt, gamma); // in us
     std::list<packet> pkt_buf;
-    std::deque<unsigned long long> time_stamps;
-    std::deque<unsigned long long> orig_time_stamps;
+    std::list<unsigned long long> time_stamps;
+    std::list<unsigned long long> orig_time_stamps;
     bool added_end_pkt = false;
     while(true){
         points_lock.lock();
@@ -107,16 +107,15 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
-        packet pkt;
-        if(added_end_pkt && pkt_buf.size() == 0){
+        if(finished && points.empty() && pkt_buf.empty()){
+            std::cout << "Breaking out of loop" << std::endl;
+            points_lock.unlock();
+            std::cout << "Hitting break" << std::endl;
             break;
         }
+        packet pkt;
         // Try to send available packets in valid window
-        if(pkt_buf.size() < window_size && !added_end_pkt){
-            // The packet we're about to create and send is the end packet
-            if(finished && points.empty()){
-                added_end_pkt = true;
-            }
+        if(pkt_buf.size() < window_size && !points.empty()){
             pack_packet(points, &next_seq, &pkt);
             std::cout << "Packet len: " << pkt.len << std::endl;
             points_lock.unlock();
@@ -138,14 +137,20 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             (struct sockaddr*) &si_other, &from_len)) > 0)
         {
             // Handle incoming acks
-            while(pkt_buf.begin() != pkt_buf.end() && ack_applies_seq(pkt_buf, pkt_ack.ack)){
+
+            // while(pkt_buf.begin() != pkt_buf.end() && ack_applies_seq(pkt_buf, pkt.ack)){
+            auto it = pkt_buf.begin();
+            auto ts_it = time_stamps.begin();
+            auto orig_ts_it = orig_time_stamps.begin();
+            while(it != pkt_buf.end()){
                 unsigned int seq = pkt_buf.begin()->seq;
                 std::cout << "Looking at seq " << seq << std::endl;
-                pkt_buf.pop_front();
-                unsigned long ts = orig_time_stamps[0];
-                time_stamps.pop_front();
-                orig_time_stamps.pop_front();
                 if(seq == pkt_ack.ack){
+                    it = pkt_buf.erase(it);
+                    unsigned long ts = *orig_ts_it;
+                    ts_it = time_stamps.erase(ts_it);
+                    orig_ts_it = orig_time_stamps.erase(orig_ts_it);
+
                     unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
@@ -164,6 +169,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     frac_window_size = cand_w;
                     window_size = min((unsigned int) frac_window_size, MAXW);
                     std::cout << "Window size: " << frac_window_size << " " << window_size << std::endl;
+                }else{
+                    it++; ts_it++; orig_ts_it++;
                 }
             }
         }
@@ -174,22 +181,52 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now().time_since_epoch()
         ).count();
-        if(time_stamps.size() > 0 && (now - time_stamps[0]) > timeout){
+        if(time_stamps.size() > 0 && (now - time_stamps.front()) > timeout){
             // Resend
             std::cout << "Hit timeout, resending" << std::endl;
             ss_thresh = ((unsigned int) frac_window_size / 2) + 1;
             frac_window_size = 1.0;
             window_size = (unsigned int) frac_window_size;
             std::cout << "Reset window, new thresh: " << ss_thresh << std::endl;
-            unsigned int ind = 0;
+            auto ts_it = time_stamps.begin();
             for(auto it = pkt_buf.begin(); it != pkt_buf.end(); it++){
                 packet pkt = *it;
                 sendto(s, &pkt, sizeof(packet), 0,
                     (const struct sockaddr*) &si_other, sizeof(si_other));
-                time_stamps[ind] = std::chrono::duration_cast<std::chrono::microseconds>(
+                *ts_it = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now().time_since_epoch()
                 ).count();
-                ind++;
+                ts_it++;
+            }
+        }
+    }
+
+    // Transmit end packet and listen for ack
+    size_t remaining_tries = 10;
+    unsigned long long last_sent = 0;
+    packet end_pkt;
+    while(true){
+        if(remaining_tries == 0){
+            std::cerr << "Ran out of tries to send end packet" << std::endl;
+            break;
+        }
+        unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count();
+        if(now - last_sent >= get_timeout(est_rtt, dev_rtt, gamma)){
+            end_pkt.seq = next_seq;
+            end_pkt.len = 0;
+            end_pkt.is_ack = false;
+            sendto(s, &end_pkt, sizeof(packet), 0,
+                (const struct sockaddr*) &si_other, sizeof(si_other));
+            last_sent = now;
+            remaining_tries--;
+        }
+        if(recvfrom(s, &end_pkt, sizeof(packet), 0,
+            (struct sockaddr*) &si_other, &from_len) > 0)
+        {
+            if(end_pkt.ack == next_seq){
+                break;
             }
         }
     }
@@ -213,6 +250,9 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
 {
     pkt->seq = *seq;
     *seq += 1;
+    pkt->ts = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
     unsigned int len = 0;
     while(len < MAXPAYLOADSIZE && !points.empty()){
         points.front().serialize();

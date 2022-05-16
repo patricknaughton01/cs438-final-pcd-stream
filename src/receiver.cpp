@@ -105,22 +105,12 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
             break;
         }
         unsigned int in_len = pkt.len;
-        for(int i = 0; i < pkt.len; i++){
-            std::cout << pkt.data[i];
-        }
         std::cout << std::endl;
         std::cout << "Exp seq " << exp_seq << " Actual: " << pkt.seq << std::endl;
         packet_ack pkt_ack;
-        if(pkt.seq == exp_seq){
-            pkt_ack.ack = pkt.seq;
-            exp_seq++;
-            unpack_packet(&pkt, vg);
-        }
-        else{
-            pkt_ack.ack = exp_seq - 1;
-        }
-
+        pkt_ack.ack = pkt.seq;
         sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
+
         std::cout << "Send ack" << std::endl;
         if(in_len == 0){
             // End of transmission
@@ -129,41 +119,7 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
         }
     }
 
-    // Wait time in ms after receiving end of file
-    unsigned long end_timeout = 100;
-    unsigned long end_start = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()
-    ).count();
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100;
-    // Set timeout on receiving - not actually expecting any more packets.
-    setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-    // Ack any remaining incoming packets
-    while(true){
-        unsigned long now = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-        if(now - end_start > end_timeout){
-            break;
-        }
-        packet pkt;
-        packet_ack pkt_ack;
-        unsigned int from_len;
-        int n_r_bytes = recvfrom(s, &pkt, sizeof(pkt), 0, (struct sockaddr*) &si_other, &from_len);
-        //std::cout << "Received " << n_r_bytes << std::endl;
-        if(n_r_bytes < 0){
-            //std::cout << "Error: " << strerror(errno) << std::endl;
-            continue;
-        }
-        else if(n_r_bytes == 0){
-            //std::cout << "Connection was closed" << std::endl;
-            break;
-        }
-        pkt_ack.ack = pkt.seq;
-
-        sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
-    }
+    
 
     close(s);
 
