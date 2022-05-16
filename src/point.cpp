@@ -42,11 +42,12 @@ const char * const Point::serialize(){
     *d_start = x;
     *(d_start + 1) = y;
     *(d_start + 2) = z;
-    unsigned int f_size = sizeof(float), i_size = sizeof(unsigned int);
-    unsigned int *c_start = ((unsigned int*)m_s_buf) + 3 * f_size / i_size;
+    
+    unsigned int *c_start = (unsigned int*) (m_s_buf + 2 * sizeof(float));
     *c_start = r;
     *(c_start + 1) = g;
     *(c_start + 2) = b;
+
     has_serialized = true;
     return m_s_buf;
 }
@@ -57,21 +58,3 @@ const char * const Point::s_buf() const{
 }
 
 
-static Point * const deserialize(const char* buf) {
-    float x, y, z;
-    unsigned short r, g, b; 
-
-    float * d_start = (float*)buf;
-    x = *d_start;
-    y = *(d_start + 1);
-    z = *(d_start + 1);
-
-    unsigned int f_size = sizeof(float), i_size = sizeof(unsigned int);
-    unsigned int *c_start = ((unsigned int*)buf) + 3 * f_size / i_size;
-
-    r = *c_start;
-    g = *(c_start + 1);
-    b = *(c_start + 2);
-
-    return new Point(x, y, z, r, g, b);
-}

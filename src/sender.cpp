@@ -53,6 +53,7 @@ bool ack_applies_seq(const std::list<packet> &pkt_buf, unsigned int ack);
 template <class T>
 void print(T s, T e);
 
+
 void diep(char *s) {
     perror(s);
     exit(1);
@@ -216,16 +217,16 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         if(now - last_sent >= get_timeout(est_rtt, dev_rtt, gamma)){
             end_pkt.seq = next_seq;
             end_pkt.len = 0;
-            end_pkt.is_ack = false;
             sendto(s, &end_pkt, sizeof(packet), 0,
                 (const struct sockaddr*) &si_other, sizeof(si_other));
             last_sent = now;
             remaining_tries--;
         }
-        if(recvfrom(s, &end_pkt, sizeof(packet), 0,
+        packet_ack pkt_ack;
+        if(recvfrom(s, &pkt_ack, sizeof(packet_ack), 0,
             (struct sockaddr*) &si_other, &from_len) > 0)
         {
-            if(end_pkt.ack == next_seq){
+            if(pkt_ack.ack == next_seq){
                 break;
             }
         }
@@ -255,6 +256,7 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
     ).count();
     unsigned int len = 0;
     while(len < MAXPAYLOADSIZE && !points.empty()){
+
         points.front().serialize();
         for(size_t i = 0; i < Point::s_buf_size; i++){
             pkt->data[len] = points.front().s_buf()[i];
@@ -382,6 +384,33 @@ void load_points(const std::string &dir, std::deque<Point> &points,
     }
 }
 
+void test(std::deque<Point> &points, std::mutex &points_lock) {
+    VoxelGrid vg(0.1);
+    for (int i = 0; i < 10; i++) {
+
+        Point point(i,1,1,2,2,2); 
+        vg.add_point(point);
+        points_lock.lock();
+        points.push_back(point);
+        points_lock.unlock();
+    } 
+    for (int i = 0; i < 10; i++) {
+        Point point(i,1,1,20,2,2);
+        vg.add_point(point);
+        points_lock.lock();
+        points.push_back(point);
+        points_lock.unlock();
+    }
+    for (int i = 0; i < 10; i++) {
+        Point point(i,1,1,40,2,2);
+        vg.add_point(point);
+        points_lock.lock();
+        points.push_back(point);
+        points_lock.unlock();
+    }
+    
+}
+
 
 int main(int argc, char** argv) {
 
@@ -400,7 +429,8 @@ int main(int argc, char** argv) {
     bool finished_flag = false;
     std::thread transfer_thread(reliablyTransfer, argv[1], udpPort,
         std::ref(points), std::ref(points_lock), std::ref(finished_flag));
-    load_points(argv[3], points, points_lock);
+    test(points, points_lock);
+    //load_points(argv[3], points, points_lock);
     finished_flag = true;
     transfer_thread.join();
 

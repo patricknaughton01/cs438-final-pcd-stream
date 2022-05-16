@@ -8,7 +8,6 @@
 typedef struct packet{
     unsigned long long ts;
     unsigned int seq;
-    unsigned int ack;
     unsigned int len;
     char data[MAXPAYLOADSIZE];
 } packet;

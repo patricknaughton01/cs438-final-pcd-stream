@@ -39,6 +39,25 @@ void diep(char *s) {
     exit(1);
 }
 
+Point * const deserialize(const char* buf) {
+    float x, y, z;
+    unsigned short r, g, b; 
+    unsigned long long ts;
+
+    float * d_start = (float*)buf;
+    x = *d_start;
+    y = *(d_start + 1);
+    z = *(d_start + 1);
+
+    unsigned int *c_start = (unsigned int*) (buf + 2 * sizeof(float));
+
+    r = *c_start;
+    g = *(c_start + 1);
+    b = *(c_start + 2);
+
+    return new Point(x, y, z, r, g, b);
+}
+
 
 /**
  * @brief Takes a packet with multiple points and adds
@@ -51,14 +70,15 @@ void unpack_packet(packet * pkt, VoxelGrid * vg) {
     float x, y, z;
     unsigned short r, g, b;
 
-    //TODO: assumes that there's no Point spread across 2 packets, correct?
     int numPoints = pkt->len / Point::s_buf_size;
     for(int i = 0; i < numPoints; i++){
         
         char* start = pkt->data + (i * Point::s_buf_size);
-        Point * point = Point::deserialize(start);
+        Point& point = *(deserialize(start));
+        point.ts = pkt->ts;
+        
         vg->add_point(point);
-
+        
     }
 
 }
@@ -85,7 +105,6 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
 
 	/* Now receive data and send acknowledgements */
     unsigned int exp_seq = 1;
-    //FILE *fp = fopen(destinationFile, "wb");
     while(true){
         packet pkt;
         std::cout << "SOCKET: " << s << std::endl;
@@ -110,6 +129,7 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
         packet_ack pkt_ack;
         pkt_ack.ack = pkt.seq;
         sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
+        unpack_packet(&pkt, vg);
 
         std::cout << "Send ack" << std::endl;
         if(in_len == 0){
@@ -123,6 +143,9 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
 
     close(s);
 
+    std::cout << vg->grid.size() << std::endl;
+    vg->print_points();
+
     return;
 }
 
@@ -133,7 +156,7 @@ int main(int argc, char** argv) {
 
     unsigned short int udpPort;
 
-    if (argc != 3) {
+    if (argc != 2) {
         fprintf(stderr, "usage: %s UDP_port\n\n", argv[0]);
         exit(1);
     }
@@ -143,5 +166,5 @@ int main(int argc, char** argv) {
 
     udpPort = (unsigned short int) atoi(argv[1]);
 
-    reliablyReceive(udpPort, &vg);
+    reliablyReceive(udpPort, vg);
 }
