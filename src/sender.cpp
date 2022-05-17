@@ -422,10 +422,19 @@ int main(int argc, char** argv) {
     std::ifstream cs(argv[4]);
     double res;
     cs >> res;
+    unsigned long long start = std::chrono::duration_cast<std::chrono::microseconds>(
+	std::chrono::system_clock::now().time_since_epoch()
+    ).count();
     unsigned long long total_points = load_points(argv[3], points, points_lock, res);
     finished_flag = true;
     transfer_thread.join();
+    unsigned long long end = std::chrono::duration_cast<std::chrono::microseconds>(
+	std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+    double time = (end - start) / 1000000.0;
     std::cout << "Transmitted " << total_points << " total points" << std::endl;
+    std::cout << "Total time: " << time << std::endl;
+    std::cout << "Throughput: " << total_points / time << std::endl;
 
     return (EXIT_SUCCESS);
 }
