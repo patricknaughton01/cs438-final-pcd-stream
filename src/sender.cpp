@@ -53,14 +53,6 @@ bool ack_applies_seq(const std::list<packet> &pkt_buf, unsigned int ack);
 template <class T>
 void print(T s, T e);
 
-bool use_throttling = false;
-//Use bucket algorithm for bandwidth throttling https://en.wikipedia.org/wiki/Token_bucket
-int bucket = 0;         //bucket used for bandwidth throttling
-unsigned long long last_bucket_check_time = 0;
-int max_bucket_size = 2400;    //affects max burst size 
-int bandwidth_rate = 2400; //bytes per second
-
-
 void diep(char *s) {
     perror(s);
     exit(1);
@@ -108,31 +100,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
     std::list<unsigned long long> orig_time_stamps;
     bool added_end_pkt = false;
     while(true){
-
-        if (use_throttling) {
-            if (last_bucket_check_time == 0) {
-                bucket = bandwidth_rate;
-            } else {
-                unsigned long long cur_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count();
-                unsigned long long time_passed = cur_time - last_bucket_check_time;
-                last_bucket_check_time = cur_time;
-                bucket += (bandwidth_rate * time_passed) / 1000;
-                if (bucket > max_bucket_size) {
-                    bucket = max_bucket_size;
-                }
-            }
-            
-
-        }
-
         points_lock.lock();
-        if(points.empty() && !finished){
-            points_lock.unlock();
-            std::cout << "SLEEPING" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            continue;
-        }
         if(finished && points.empty() && pkt_buf.empty()){
             std::cout << "Breaking out of loop" << std::endl;
             points_lock.unlock();
@@ -142,33 +110,21 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         packet pkt;
         // Try to send available packets in valid window
         if(pkt_buf.size() < window_size && !points.empty()){
-            bool can_send = true;
-            if (use_throttling) {
-                if (bucket > MAXPAYLOADSIZE) {
-                    bucket -= MAXPAYLOADSIZE;
-                } else {
-                    can_send = false;
-                }
-            }
-
-            if (can_send) {
-                pack_packet(points, &next_seq, &pkt);
-                std::cout << "Packet len: " << pkt.len << std::endl;
-                sendto(s, &pkt, sizeof(packet), 0,
-                    (const struct sockaddr*) &si_other, sizeof(si_other));
-                // Track in-flight packets
-                pkt_buf.push_back(pkt);
-                unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::system_clock::now().time_since_epoch()
-                ).count();
-                time_stamps.push_back(now);
-                orig_time_stamps.push_back(now);
-            }
-            
+            pack_packet(points, &next_seq, &pkt);
+            std::cout << "Packet len: " << pkt.len << std::endl;
+            sendto(s, &pkt, sizeof(packet), 0,
+                (const struct sockaddr*) &si_other, sizeof(si_other));
+            // Track in-flight packets
+            pkt_buf.push_back(pkt);
+            unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now().time_since_epoch()
+            ).count();
+            time_stamps.push_back(now);
+            orig_time_stamps.push_back(now);
         }
-            
+
         points_lock.unlock();
-        
+
         // Receive any incoming acks
         packet_ack pkt_ack;
         if((recv_bytes = recvfrom(s, &pkt_ack, sizeof(packet_ack), 0,
@@ -182,7 +138,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             auto orig_ts_it = orig_time_stamps.begin();
             while(it != pkt_buf.end()){
                 unsigned int seq = pkt_buf.begin()->seq;
-                std::cout << "Looking at seq " << seq << std::endl;
+                // std::cout << "Looking at seq " << seq << std::endl;
                 if(seq == pkt_ack.ack){
                     it = pkt_buf.erase(it);
                     unsigned long ts = *orig_ts_it;
@@ -195,10 +151,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     double dt = (double)(now - ts);
                     dev_rtt = (1 - beta) * dev_rtt + beta * std::abs(dt - est_rtt);
                     est_rtt = (1 - alpha) * est_rtt + alpha * dt;
-                    std::cout << "est rtt: " << est_rtt << std::endl;
-                    std::cout << "dev rtt: " << dev_rtt << std::endl;
+                    // std::cout << "est rtt: " << est_rtt << std::endl;
+                    // std::cout << "dev rtt: " << dev_rtt << std::endl;
                     timeout = get_timeout(est_rtt, dev_rtt, gamma);
-                    std::cout << "New timeout " << timeout << std::endl;
+                    // std::cout << "New timeout " << timeout << std::endl;
                     // Also update congestion window
                     double cand_w = frac_window_size + 1;
                     if(cand_w > ss_thresh){
@@ -206,14 +162,14 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     }
                     frac_window_size = cand_w;
                     window_size = min((unsigned int) frac_window_size, MAXW);
-                    std::cout << "Window size: " << frac_window_size << " " << window_size << std::endl;
+                    // std::cout << "Window size: " << frac_window_size << " " << window_size << std::endl;
                 }else{
                     it++; ts_it++; orig_ts_it++;
                 }
             }
         }
         else{
-            std::cout << "Error: " << strerror(errno) << std::endl;
+            // std::cout << "Error: " << strerror(errno) << std::endl;
         }
         // Check for timeouts
         unsigned long long now = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -221,11 +177,11 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         ).count();
         if(time_stamps.size() > 0 && (now - time_stamps.front()) > timeout){
             // Resend
-            std::cout << "Hit timeout, resending" << std::endl;
+            // std::cout << "Hit timeout, resending" << std::endl;
             ss_thresh = ((unsigned int) frac_window_size / 2) + 1;
             frac_window_size = 1.0;
             window_size = (unsigned int) frac_window_size;
-            std::cout << "Reset window, new thresh: " << ss_thresh << std::endl;
+            // std::cout << "Reset window, new thresh: " << ss_thresh << std::endl;
             auto ts_it = time_stamps.begin();
             for(auto it = pkt_buf.begin(); it != pkt_buf.end(); it++){
                 packet pkt = *it;
@@ -293,12 +249,18 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
     ).count();
     unsigned int len = 0;
     while(len < MAXPAYLOADSIZE && !points.empty()){
-
         points.front().serialize();
         for(size_t i = 0; i < Point::s_buf_size; i++){
             pkt->data[len] = points.front().s_buf()[i];
             len += 1;
         }
+        std::cout << "Serialization: " << std::endl;
+        Point f = points.front();
+        const unsigned char *buf = f.s_buf();
+        const float *n_buf = (float*) buf;
+        const unsigned char *c_buf = (unsigned char*)(buf + 3 * sizeof(float));
+        std::cout << *(n_buf+2) << " ";
+        std::cout << f.z << std::endl;
         points.pop_front();
     }
     pkt->len = len;
@@ -362,19 +324,31 @@ void load_tf(std::vector<double> &R, std::vector<double> &p, std::ifstream &tf_s
 }
 
 
-Point load_point(cv::Vec3b color, unsigned int depth, double x, double y,
+Point load_point(cv::Vec3b color, uint16_t depth, double x, double y,
     std::vector<double> intrinsics, std::vector<double> R,
     std::vector<double> p)
 {
     double fx = intrinsics[0], fy = intrinsics[1], cx = intrinsics[2],
         cy = intrinsics[3];
-    double z_c = (double) depth;
+    double z_c = ((double) depth) / 1000;
     double x_c = z_c * (x - cx) / fx;
     double y_c = z_c * (y - cy) / fy;
     double x_w = R[0] * x_c + R[3] * y_c + R[6] * z_c + p[0];
     double y_w = R[1] * x_c + R[4] * y_c + R[7] * z_c + p[1];
     double z_w = R[2] * x_c + R[5] * y_c + R[8] * z_c + p[2];
-    Point point(x_w, y_w, z_w, color[0], color[1], color[2]);
+    // std::cout << "intrinsics" << std::endl;
+    // print(intrinsics.begin(), intrinsics.end());
+    // std::cout << "R" << std::endl;
+    // print(R.begin(), R.end());
+    // std::cout << "p" << std::endl;
+    // print(p.begin(), p.end());
+    // std::cout << "x y d" << std::endl;
+    // std::cout << x << " " << y << " " << depth << std::endl;
+    // std::cout << "x_w y_w z_w" << std::endl;
+    // std::cout << x_w << " " << y_w << " " << z_w << std::endl;
+    // std::cout << "Color: " << std::endl;
+    // std::cout << +(color[0]) << " " << +(color[1]) << " " << +(color[2]) << std::endl;
+    Point point(x_w, y_w, z_w, color[2], color[1], color[0]);
     return point;
 }
 
@@ -382,7 +356,7 @@ Point load_point(cv::Vec3b color, unsigned int depth, double x, double y,
 void load_points(const std::string &dir, std::deque<Point> &points,
     std::mutex &points_lock)
 {
-    VoxelGrid vg(0.1);
+    VoxelGrid vg(0.001);
     std::string int_path = dir + "/" + IMG_DIR + "/" + INTRINSICS_FN;
     std::vector<double> intrinsics;
     std::ifstream int_stream(int_path);
@@ -401,12 +375,12 @@ void load_points(const std::string &dir, std::deque<Point> &points,
         std::string c_path = color_pref + c_fn;
         std::string d_path = depth_pref + d_fn;
         cv::Mat c_image = cv::imread(c_path);
-        cv::Mat d_image = cv::imread(d_path, cv::IMREAD_ANYDEPTH | cv::IMREAD_GRAYSCALE);
+        cv::Mat d_image = cv::imread(d_path, cv::IMREAD_ANYDEPTH);
         std::vector<double> R, p;
         load_tf(R, p, tf_stream);
         for(size_t r = 0; r < c_image.rows; r++){
             for(size_t c = 0; c < c_image.cols; c++){
-                unsigned int depth = d_image.at<unsigned int>(r, c);
+                uint16_t depth = d_image.at<uint16_t>(r, c);
                 if(depth > 0){
                     Point point = load_point(c_image.at<cv::Vec3b>(r, c),
                         depth, (double) c, (double) r, intrinsics, R, p);
@@ -422,15 +396,15 @@ void load_points(const std::string &dir, std::deque<Point> &points,
 }
 
 void test(std::deque<Point> &points, std::mutex &points_lock) {
-    VoxelGrid vg(0.1);
+    VoxelGrid vg(0.01);
     for (int i = 0; i < 10; i++) {
 
-        Point point(i,1,1,2,2,2); 
+        Point point(i,1,1,2,2,2);
         vg.add_point(point);
         points_lock.lock();
         points.push_back(point);
         points_lock.unlock();
-    } 
+    }
     for (int i = 0; i < 10; i++) {
         Point point(i,1,1,20,2,2);
         vg.add_point(point);
@@ -445,7 +419,7 @@ void test(std::deque<Point> &points, std::mutex &points_lock) {
         points.push_back(point);
         points_lock.unlock();
     }
-    
+
 }
 
 

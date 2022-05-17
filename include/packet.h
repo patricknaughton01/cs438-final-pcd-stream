@@ -9,7 +9,7 @@ typedef struct packet{
     unsigned long long ts;
     unsigned int seq;
     unsigned int len;
-    char data[MAXPAYLOADSIZE];
+    unsigned char data[MAXPAYLOADSIZE];
 } packet;
 
 //Client can send minimal data back in the ack
