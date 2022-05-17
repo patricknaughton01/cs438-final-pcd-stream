@@ -137,7 +137,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                 unsigned int seq = pkt_buf.begin()->seq;
                 if(seq == pkt_ack.ack){
                     it = pkt_buf.erase(it);
-                    unsigned long ts = *orig_ts_it;
+                    unsigned long ts = *ts_it;
                     ts_it = time_stamps.erase(ts_it);
                     orig_ts_it = orig_time_stamps.erase(orig_ts_it);
 
