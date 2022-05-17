@@ -111,7 +111,6 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         // Try to send available packets in valid window
         if(pkt_buf.size() < window_size && !points.empty()){
             pack_packet(points, &next_seq, &pkt);
-            std::cout << "Packet len: " << pkt.len << std::endl;
             sendto(s, &pkt, sizeof(packet), 0,
                 (const struct sockaddr*) &si_other, sizeof(si_other));
             // Track in-flight packets
@@ -131,14 +130,11 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
             (struct sockaddr*) &si_other, &from_len)) > 0)
         {
             // Handle incoming acks
-
-            // while(pkt_buf.begin() != pkt_buf.end() && ack_applies_seq(pkt_buf, pkt.ack)){
             auto it = pkt_buf.begin();
             auto ts_it = time_stamps.begin();
             auto orig_ts_it = orig_time_stamps.begin();
             while(it != pkt_buf.end()){
                 unsigned int seq = pkt_buf.begin()->seq;
-                // std::cout << "Looking at seq " << seq << std::endl;
                 if(seq == pkt_ack.ack){
                     it = pkt_buf.erase(it);
                     unsigned long ts = *orig_ts_it;
@@ -151,10 +147,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     double dt = (double)(now - ts);
                     dev_rtt = (1 - beta) * dev_rtt + beta * std::abs(dt - est_rtt);
                     est_rtt = (1 - alpha) * est_rtt + alpha * dt;
-                    // std::cout << "est rtt: " << est_rtt << std::endl;
-                    // std::cout << "dev rtt: " << dev_rtt << std::endl;
                     timeout = get_timeout(est_rtt, dev_rtt, gamma);
-                    // std::cout << "New timeout " << timeout << std::endl;
                     // Also update congestion window
                     double cand_w = frac_window_size + 1;
                     if(cand_w > ss_thresh){
@@ -162,7 +155,6 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
                     }
                     frac_window_size = cand_w;
                     window_size = min((unsigned int) frac_window_size, MAXW);
-                    // std::cout << "Window size: " << frac_window_size << " " << window_size << std::endl;
                 }else{
                     it++; ts_it++; orig_ts_it++;
                 }
@@ -177,11 +169,9 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport,
         ).count();
         if(time_stamps.size() > 0 && (now - time_stamps.front()) > timeout){
             // Resend
-            // std::cout << "Hit timeout, resending" << std::endl;
             ss_thresh = ((unsigned int) frac_window_size / 2) + 1;
             frac_window_size = 1.0;
             window_size = (unsigned int) frac_window_size;
-            // std::cout << "Reset window, new thresh: " << ss_thresh << std::endl;
             auto ts_it = time_stamps.begin();
             for(auto it = pkt_buf.begin(); it != pkt_buf.end(); it++){
                 packet pkt = *it;
@@ -254,13 +244,10 @@ void pack_packet(std::deque<Point> &points, unsigned int *seq, packet* pkt)
             pkt->data[len] = points.front().s_buf()[i];
             len += 1;
         }
-        std::cout << "Serialization: " << std::endl;
         Point f = points.front();
         const unsigned char *buf = f.s_buf();
         const float *n_buf = (float*) buf;
         const unsigned char *c_buf = (unsigned char*)(buf + 3 * sizeof(float));
-        std::cout << *(n_buf+2) << " ";
-        std::cout << f.z << std::endl;
         points.pop_front();
     }
     pkt->len = len;
@@ -336,27 +323,16 @@ Point load_point(cv::Vec3b color, uint16_t depth, double x, double y,
     double x_w = R[0] * x_c + R[3] * y_c + R[6] * z_c + p[0];
     double y_w = R[1] * x_c + R[4] * y_c + R[7] * z_c + p[1];
     double z_w = R[2] * x_c + R[5] * y_c + R[8] * z_c + p[2];
-    // std::cout << "intrinsics" << std::endl;
-    // print(intrinsics.begin(), intrinsics.end());
-    // std::cout << "R" << std::endl;
-    // print(R.begin(), R.end());
-    // std::cout << "p" << std::endl;
-    // print(p.begin(), p.end());
-    // std::cout << "x y d" << std::endl;
-    // std::cout << x << " " << y << " " << depth << std::endl;
-    // std::cout << "x_w y_w z_w" << std::endl;
-    // std::cout << x_w << " " << y_w << " " << z_w << std::endl;
-    // std::cout << "Color: " << std::endl;
-    // std::cout << +(color[0]) << " " << +(color[1]) << " " << +(color[2]) << std::endl;
     Point point(x_w, y_w, z_w, color[2], color[1], color[0]);
     return point;
 }
 
 
-void load_points(const std::string &dir, std::deque<Point> &points,
-    std::mutex &points_lock)
+unsigned long long load_points(const std::string &dir, std::deque<Point> &points,
+    std::mutex &points_lock, double res)
 {
-    VoxelGrid vg(0.001);
+    VoxelGrid vg(res);
+    unsigned long long total_points = 0;
     std::string int_path = dir + "/" + IMG_DIR + "/" + INTRINSICS_FN;
     std::vector<double> intrinsics;
     std::ifstream int_stream(int_path);
@@ -388,11 +364,14 @@ void load_points(const std::string &dir, std::deque<Point> &points,
                         points_lock.lock();
                         points.push_back(point);
                         points_lock.unlock();
+                        total_points++;
                     }
                 }
             }
         }
+        std::cout << "Finished frame " << i+1 << std::endl;
     }
+    return total_points;
 }
 
 void test(std::deque<Point> &points, std::mutex &points_lock) {
@@ -428,9 +407,9 @@ int main(int argc, char** argv) {
     unsigned short int udpPort;
     unsigned long long int numBytes;
 
-    if (argc != 4) {
+    if (argc != 5) {
         fprintf(stderr,
-            "usage: %s receiver_hostname receiver_port dir_name\n\n", argv[0]);
+            "usage: %s receiver_hostname receiver_port dir_name cfg_file\n\n", argv[0]);
         exit(1);
     }
     udpPort = (unsigned short int) atoi(argv[2]);
@@ -440,10 +419,13 @@ int main(int argc, char** argv) {
     bool finished_flag = false;
     std::thread transfer_thread(reliablyTransfer, argv[1], udpPort,
         std::ref(points), std::ref(points_lock), std::ref(finished_flag));
-    //test(points, points_lock);
-    load_points(argv[3], points, points_lock);
+    std::ifstream cs(argv[4]);
+    double res;
+    cs >> res;
+    unsigned long long total_points = load_points(argv[3], points, points_lock, res);
     finished_flag = true;
     transfer_thread.join();
+    std::cout << "Transmitted " << total_points << " total points" << std::endl;
 
     return (EXIT_SUCCESS);
 }

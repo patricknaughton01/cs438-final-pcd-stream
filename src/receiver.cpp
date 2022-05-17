@@ -102,14 +102,7 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid *vg, std::mutex &vg
     unsigned int exp_seq = 1;
     while(true){
         packet pkt;
-        // std::cout << "SOCKET: " << s << std::endl;
-        // std::cout << "PKT ARGS: " << &pkt << " " << sizeof(pkt) << std::endl;
-        // std::cout << "ADDR ARGS: " << (struct sockaddr*) &si_other << " " <<  &from_len << std::endl;
         int n_r_bytes = recvfrom(s, &pkt, sizeof(pkt), 0, (struct sockaddr*) &si_other, &from_len);
-        // std::cout << "Received " << n_r_bytes << std::endl;
-        // std::cout << "Received from: " << inet_ntoa(si_other.sin_addr) << std::endl;
-        // std::cout << "From len: " << from_len << std::endl;
-        // std::cout << "Packet len: " << pkt.len << std::endl;
         if(n_r_bytes < 0){
             std::cout << "Recv Error: " << strerror(errno) << std::endl;
             continue;
@@ -119,8 +112,6 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid *vg, std::mutex &vg
             break;
         }
         unsigned int in_len = pkt.len;
-        std::cout << std::endl;
-        std::cout << "Exp seq " << exp_seq << " Actual: " << pkt.seq << std::endl;
         packet_ack pkt_ack;
         pkt_ack.ack = pkt.seq;
         sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
@@ -128,7 +119,6 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid *vg, std::mutex &vg
         unpack_packet(&pkt, vg);
         vg_lock.unlock();
 
-        // std::cout << "Send ack" << std::endl;
         if(in_len == 0){
             // End of transmission
             std::cout << "Breaking out of loop" << std::endl;
@@ -180,13 +170,16 @@ int main(int argc, char** argv) {
 
     unsigned short int udpPort;
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s UDP_port\n\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stderr, "usage: %s UDP_port cfg_file\n\n", argv[0]);
         exit(1);
     }
 
     //Use default arg res = .1
-    VoxelGrid vg(0.001);
+    std::ifstream cs(argv[2]);
+    double res;
+    cs >> res;
+    VoxelGrid vg(res);
     bool finished = false;
 
     udpPort = (unsigned short int) atoi(argv[1]);

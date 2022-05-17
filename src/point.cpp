@@ -38,21 +38,11 @@ const unsigned char * const Point::serialize(){
     if(!has_serialized){
         m_s_buf = (unsigned char*)malloc(s_buf_size);
     }
-    // std::cout << "Has serialized " << has_serialized << std::endl;
-    // std::cout << "Writing numbers" << std::endl;
-    // printf("%p\n", m_s_buf);
-    // std::cout << m_s_buf << std::endl;
-    // std::cout << "Buff size " << s_buf_size << std::endl;
     float *d_start = (float*)m_s_buf;
-    // std::cout << m_s_buf << std::endl;
-    // std::cout << d_start << std::endl;
-    // std::cout << d_start + 1 << std::endl;
-    // std::cout << d_start + 2 << std::endl;
     *d_start = x;
     *(d_start + 1) = y;
     *(d_start + 2) = z;
 
-    std::cout << "Writing color" << std::endl;
     unsigned char *c_start = (unsigned char*) (m_s_buf + 3 * sizeof(float));
     *c_start = r;
     *(c_start + 1) = g;
