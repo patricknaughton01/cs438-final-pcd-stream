@@ -2,14 +2,13 @@
 #define PACKET_H
 
 #include <stdbool.h>
-#define MAXPAYLOADSIZE 1350
+#define MAXPAYLOADSIZE 1200
 
 //Only used for non-ACK packets
 typedef struct packet{
     unsigned int seq;
-    unsigned int ack;
     unsigned int len;
-    char data[MAXPAYLOADSIZE];
+    unsigned char data[MAXPAYLOADSIZE];
 } packet;
 
 //Client can send minimal data back in the ack

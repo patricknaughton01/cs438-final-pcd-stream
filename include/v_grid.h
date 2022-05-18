@@ -27,6 +27,7 @@ public:
         c_thresh(C_THRESH){};
     bool add_point(const Point &p);
     Cell get_cell_of_point(const Point &p) const;
+    void print_points();
 };
 
 #endif // V_GRID_H

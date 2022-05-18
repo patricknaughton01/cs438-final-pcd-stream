@@ -17,6 +17,10 @@
 #include <pthread.h>
 #include <iostream>
 #include <chrono>
+#include <thread>
+#include <mutex>
+#include <string>
+#include <fstream>
 #include "packet.h"
 #include "point.h"
 #include "v_grid.h"
@@ -28,6 +32,23 @@
  */
 
 VoxelGrid * vg;
+
+Point deserialize(const unsigned char* buf) {
+    float x, y, z;
+    unsigned char r, g, b;
+    float * d_start = (float*)buf;
+    x = *d_start;
+    y = *(d_start + 1);
+    z = *(d_start + 2);
+
+    unsigned char *c_start = (unsigned char*) (buf + 3 * sizeof(float));
+
+    r = *c_start;
+    g = *(c_start + 1);
+    b = *(c_start + 2);
+
+    return Point(x, y, z, r, g, b);
+}
 
 
 struct sockaddr_in si_me, si_other;
@@ -55,8 +76,8 @@ void unpack_packet(packet * pkt, VoxelGrid * vg) {
     int numPoints = pkt->len / Point::s_buf_size;
     for(int i = 0; i < numPoints; i++){
         
-        char* start = pkt->data + (i * Point::s_buf_size);
-        Point * point = Point::deserialize(start);
+        unsigned char* start = pkt->data + (i * Point::s_buf_size);
+        Point point = deserialize(start);
         vg->add_point(point);
 
     }
@@ -88,14 +109,7 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
     //FILE *fp = fopen(destinationFile, "wb");
     while(true){
         packet pkt;
-        std::cout << "SOCKET: " << s << std::endl;
-        std::cout << "PKT ARGS: " << &pkt << " " << sizeof(pkt) << std::endl;
-        std::cout << "ADDR ARGS: " << (struct sockaddr*) &si_other << " " <<  &from_len << std::endl;
         int n_r_bytes = recvfrom(s, &pkt, sizeof(pkt), 0, (struct sockaddr*) &si_other, &from_len);
-        std::cout << "Received " << n_r_bytes << std::endl;
-        std::cout << "Received from: " << inet_ntoa(si_other.sin_addr) << std::endl;
-        std::cout << "From len: " << from_len << std::endl;
-        std::cout << "Packet len: " << pkt.len << std::endl;
         if(n_r_bytes < 0){
             std::cout << "Recv Error: " << strerror(errno) << std::endl;
             continue;
@@ -105,11 +119,6 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
             break;
         }
         unsigned int in_len = pkt.len;
-        for(int i = 0; i < pkt.len; i++){
-            std::cout << pkt.data[i];
-        }
-        std::cout << std::endl;
-        std::cout << "Exp seq " << exp_seq << " Actual: " << pkt.seq << std::endl;
         packet_ack pkt_ack;
         if(pkt.seq == exp_seq){
             pkt_ack.ack = pkt.seq;
@@ -121,7 +130,7 @@ void reliablyReceive(unsigned short int myUDPport, VoxelGrid * vg) {
         }
 
         sendto(s, &pkt_ack, sizeof(pkt_ack), 0, (const struct sockaddr*) &si_other, sizeof(si_other));
-        std::cout << "Send ack" << std::endl;
+        std::cout << "Send ack " << pkt_ack.ack << std::endl;
         if(in_len == 0){
             // End of transmission
             std::cout << "Breaking out of loop" << std::endl;
@@ -178,14 +187,19 @@ int main(int argc, char** argv) {
     unsigned short int udpPort;
 
     if (argc != 3) {
-        fprintf(stderr, "usage: %s UDP_port\n\n", argv[0]);
+        fprintf(stderr, "usage: %s UDP_port cfg_file\n\n", argv[0]);
         exit(1);
     }
 
     //Use default arg res = .1
-    vg = new VoxelGrid();
+    std::ifstream cs(argv[2]);
+    double res;
+    cs >> res;
+    VoxelGrid vg(res);
+    // std::cout << res << std::endl;
 
     udpPort = (unsigned short int) atoi(argv[1]);
 
     reliablyReceive(udpPort, &vg);
+    return 0;
 }
