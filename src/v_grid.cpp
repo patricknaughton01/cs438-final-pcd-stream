@@ -5,7 +5,7 @@
 
 /**
  * @brief Adds a point to the voxel grid if the point's cell is empty or
- * or if the timestamp is more recent and it is sufficiently 
+ * or if the timestamp is more recent and it is sufficiently
  * different from the current point in its cell.
  *
  * @param p Point to add.
@@ -19,7 +19,7 @@ bool VoxelGrid::add_point(const Point &p){
         return true;
     }
     const Point &curr_p = grid.at(c);
-    if(p.ts >= curr_p.ts && (p.d_dist(curr_p) > d_thresh || p.c_dist(curr_p) > c_thresh)){
+    if(p.d_dist(curr_p) > d_thresh || p.c_dist(curr_p) > c_thresh){
         grid.at(c) = p;
         return true;
     }
@@ -47,5 +47,3 @@ void VoxelGrid::print_points() {
         std::cout << pt.r << "," << pt.g << "," << pt.b << std::endl;
     }
 }
-
-
